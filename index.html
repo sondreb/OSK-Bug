@@ -1,40 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Simple Dialog App</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: yellow;
+        }
+
+        #openDialog {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            border: 2px solid green;
+            z-index: 1000;
+        }
+
+        .dialog.open {
+            display: flex;
+        }
+
+        .dialog-content {
+            background: white;
+            padding: 20px;
+            border: 3px solid red;
+            width: 300px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .dialog-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .app {
+            height: 80%;
+            background-color: red;
+            overflow: hidden;
+        }
+    </style>
 </head>
+
 <body>
-    <button id="openDialog">Open Dialog</button>
 
-    <p>This is a bug that exists on Edge 141.03537.99 on Google Pixel 9 Pro, Android version 16</p>
+    <div class="app">
 
-    <p>Click the "Open Dialog", then focus the input field and scroll to the bottom. You will see the yellow color of the background.</p>
+        <button id="openDialog">Open Dialog</button>
 
-    <p>This is not a problem on Chrome 142.0.7444.48 on the same device.</p>
+        <p>Paragraph 1</p>
 
-    <p>Paragraph 1</p>
+        <p>Paragraph 2</p>
 
-    <p>Paragraph 2</p>
+        <p>Paragraph 3</p>
 
-    <p>Paragraph 3</p>
+        <p>Paragraph 4</p>
 
-    <p>Paragraph 4</p>
+        <p>Paragraph 5</p>
 
-    <p>Paragraph 5</p>
+        <p>Paragraph 6</p>
 
-    <p>Paragraph 6</p>
+        <p>Paragraph 7</p>
 
-    <p>Paragraph 7</p>
-    
+    </div>
+
     <div id="dialog" class="dialog">
         <div class="dialog-content">
             <input type="text" placeholder="Enter text here..." class="dialog-input">
+
+            <div id="log"></div>
+
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const openDialogBtn = document.getElementById('openDialog');
+        const dialog = document.getElementById('dialog');
+        let dialogOpen = false;
+
+        // Function to update app height based on visual viewport
+        function updateAppHeight() {
+            if (window.visualViewport && dialogOpen) {
+                const height = window.visualViewport.height;
+                const width = window.visualViewport.width;
+
+                dialog.style.height = `${height}px`;
+                document.getElementById('log').innerText = 'VisualViewport API is supported. ' + height + 'px';
+            }
+        }
+
+        openDialogBtn.addEventListener('click', () => {
+            dialog.classList.add('open');
+            dialogOpen = true;
+            updateAppHeight();
+        });
+
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                dialog.classList.remove('open');
+                dialogOpen = false;
+                dialog.style.height = '';
+            }
+        });
+
+        // Update app height when visual viewport changes (e.g., keyboard opens/closes)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateAppHeight);
+            window.visualViewport.addEventListener('scroll', updateAppHeight);
+        }
+    </script>
 </body>
 </html>
