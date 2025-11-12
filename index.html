@@ -25,6 +25,20 @@
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            margin: 5px;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .dialog-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
 
         .dialog {
@@ -34,24 +48,20 @@
             left: 20px;
             right: 20px;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            border: 2px solid green;
+
+            /* width: 100dvw; */
+            height: 100svh;
+
+            background-color: white;
+            border: 4px solid green;
             z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .dialog.open {
-            display: flex;
-        }
-
-        .dialog-content {
-            background: white;
-            padding: 20px;
-            border: 3px solid red;
-            width: 300px;
-            width: 100%;
-            height: 100%;
+            display: block;
         }
 
         .dialog-input {
@@ -66,6 +76,13 @@
             background-color: red;
             overflow: hidden;
         }
+
+        #log {
+            /** Make sure to wrap text in all ways possible: */
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
     </style>
 </head>
 
@@ -73,9 +90,19 @@
 
     <div class="app">
 
-        <button id="openDialog">Open Dialog</button>
+        <div class="dialog-buttons">
+            <button class="dialog-btn" data-height-unit="vh">Open Dialog (vh)</button>
+            <button class="dialog-btn" data-height-unit="svh">Open Dialog (svh)</button>
+            <button class="dialog-btn" data-height-unit="lvh">Open Dialog (lvh)</button>
+            <button class="dialog-btn" data-height-unit="dvh">Open Dialog (dvh)</button>
+            <button class="dialog-btn" data-height-unit="vb">Open Dialog (vb)</button>
+            <button class="dialog-btn" data-height-unit="svb">Open Dialog (svb)</button>
+            <button class="dialog-btn" data-height-unit="lvb">Open Dialog (lvb)</button>
+            <button class="dialog-btn" data-height-unit="dvb">Open Dialog (dvb)</button>
+            <button id="jsHeightBtn" class="dialog-btn">Open Dialog (JS visualViewport.height)</button>
+        </div>
 
-        <p>Paragraph 1</p>
+        <p>Paragraph 11</p>
 
         <p>Paragraph 2</p>
 
@@ -92,40 +119,90 @@
     </div>
 
     <div id="dialog" class="dialog">
-        <div class="dialog-content">
-            <input type="text" placeholder="Enter text here..." class="dialog-input">
-
-            <div id="log"></div>
-
-        </div>
+        <input type="text" placeholder="Enter text here..." class="dialog-input">
+        <div id="log"></div>
     </div>
 
     <script>
-        const openDialogBtn = document.getElementById('openDialog');
+        const dialogBtns = document.querySelectorAll('.dialog-btn');
+        const jsHeightBtn = document.getElementById('jsHeightBtn');
         const dialog = document.getElementById('dialog');
         let dialogOpen = false;
+        let currentHeightUnit = 'svh';
+        let useJsHeight = false;
 
         // Function to update app height based on visual viewport
         function updateAppHeight() {
             if (window.visualViewport && dialogOpen) {
-                const height = window.visualViewport.height;
-                const width = window.visualViewport.width;
+                // const height = window.visualViewport.height;
+                // const width = window.visualViewport.width;
 
-                dialog.style.height = `${height}px`;
-                document.getElementById('log').innerText = 'VisualViewport API is supported. ' + height + 'px';
+                // dialog.style.height = `${height}px`;
+                const height = window.visualViewport.height;
+                
+                // If using JS height mode, update the dialog height dynamically
+                if (useJsHeight) {
+                    dialog.style.height = `${height}px`;
+                }
+                
+                // Get dialog element dimensions and properties
+                const dialogRect = dialog.getBoundingClientRect();
+                const computedStyle = window.getComputedStyle(dialog);
+                
+                const logData = {
+                    heightUnit: useJsHeight ? 'JS (visualViewport.height px)' : currentHeightUnit,
+                    visualViewport: {
+                        height: window.visualViewport.height,
+                        offsetTop: window.visualViewport.offsetTop
+                    },
+                    dialogElement: {
+                        clientHeight: dialog.clientHeight,
+                        offsetHeight: dialog.offsetHeight,
+                        scrollHeight: dialog.scrollHeight
+                    },
+                    boundingRect: {
+                        height: dialogRect.height,
+                        top: dialogRect.top,
+                        bottom: dialogRect.bottom
+                    },
+                    computedStyle: {
+                        height: computedStyle.height,
+                        display: computedStyle.display,
+                        position: computedStyle.position,
+                        top: computedStyle.top
+                    }
+                };
+                
+                document.getElementById('log').innerText = 'Dialog Element Info:\n' + JSON.stringify(logData, null, 2);
             }
         }
 
-        openDialogBtn.addEventListener('click', () => {
-            dialog.classList.add('open');
-            dialogOpen = true;
-            updateAppHeight();
+        dialogBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.id === 'jsHeightBtn') {
+                    // Use JavaScript to set height based on visualViewport
+                    useJsHeight = true;
+                    currentHeightUnit = 'JS';
+                    if (window.visualViewport) {
+                        dialog.style.height = `${window.visualViewport.height}px`;
+                    }
+                } else {
+                    // Use CSS units
+                    useJsHeight = false;
+                    currentHeightUnit = btn.dataset.heightUnit;
+                    dialog.style.height = `100${currentHeightUnit}`;
+                }
+                dialog.classList.add('open');
+                dialogOpen = true;
+                updateAppHeight();
+            });
         });
 
         dialog.addEventListener('click', (e) => {
             if (e.target === dialog) {
                 dialog.classList.remove('open');
                 dialogOpen = false;
+                useJsHeight = false;
                 dialog.style.height = '';
             }
         });
